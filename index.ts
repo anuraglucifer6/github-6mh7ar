@@ -11,15 +11,15 @@ import { paths } from './routeEdgeData';
 import { stnLoc } from './stationLocationData';
 
 const color = [
-  '#00ffff',
-  '#00bfff',
-  '#009fff',
-  '#0080ff',
-  '#0060ff',
-  '#0040ff',
-  '#0020ff',
-  '#0010d9',
-  '#0000b3',
+  "#ebdc78",
+  "#8be04e",
+  "#5ad45a",
+  "#00b7c7",
+  "#0d88e6",
+  "#1a53ff",
+  "#4421af",
+  "#7c1158",
+  "#b30000"
 ];
 
 function getIndex(freq: number) {
@@ -32,23 +32,52 @@ function getIndex(freq: number) {
   else if (freq > 100) return 2;
   else if (freq > 50) return 1;
   else return 0;
-};
-
-const addPath = (path: {
-  stn1: string;
-  stn2: string;
-  freq: number;
-}, map: google.maps.Map) => {
-  const pathCoordinates = [stnLoc[stn1], stnLoc[stn2]];
-  const stnPath = new google.maps.Polyline({
-    path: pathCoordinates,
-    geodesic: true,
-    strokeColor: color[getIndex(freq)],
-    strokeOpacity: 1.0,
-    strokeWeight: (getIndex(freq) + 1),
-  });
-  stnPath.setMap(map);
 }
+
+function addMarker(
+  location: google.maps.LatLngLiteral,
+  map: google.maps.Map
+) {
+  // Add the marker at the clicked location, and add the next-available label
+  // from the array of alphabetical characters.
+  new google.maps.Marker({
+    position: location,
+    icon: {
+      url: 'https://drive.google.com/uc?id=1L3qgGaLbgVQ1XEFbcgh-0ft8tsEJJOpg',
+      scaledSize: new google.maps.Size(3, 3),
+    },
+    map: map,
+  });
+}
+
+const addPath = (
+  path: {
+    stn1: string;
+    stn2: string;
+    freq: number;
+  },
+  map: google.maps.Map
+) => {
+  const { stn1, stn2, freq } = path;
+  const pathCoordinates = [stnLoc[stn1], stnLoc[stn2]];
+  if (
+    stnLoc[stn1] &&
+    stnLoc[stn2] &&
+    stnLoc[stn1].lat !== 0 &&
+    stnLoc[stn1].lng !== 0 &&
+    stnLoc[stn2].lat !== 0 &&
+    stnLoc[stn2].lng !== 0
+  ) {
+    const stnPath = new google.maps.Polyline({
+      path: pathCoordinates,
+      geodesic: true,
+      strokeColor: color[getIndex(freq)],
+      strokeOpacity: 1.0,
+      strokeWeight: 2,
+    });
+    stnPath.setMap(map);
+  }
+};
 
 function initMap(): void {
   const map = new google.maps.Map(
@@ -59,6 +88,12 @@ function initMap(): void {
       mapTypeId: 'terrain',
     }
   );
+  const stations = paths.reduce((acc, path) => {
+    acc[path.stn1] = true;
+    acc[path.stn2] = true;
+    return acc;
+  }, {});
+  Object.keys(stations).forEach((stn) => addMarker(stnLoc[stn], map))
   paths.forEach((stnPath) => addPath(stnPath, map));
 }
 
