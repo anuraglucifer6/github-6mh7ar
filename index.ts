@@ -73,7 +73,7 @@ const addPath = (
       geodesic: true,
       strokeColor: color[getIndex(freq)],
       strokeOpacity: 1.0,
-      strokeWeight: 2,
+      strokeWeight: 4,
     });
     stnPath.setMap(map);
   }
