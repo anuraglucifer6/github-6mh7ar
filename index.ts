@@ -44,7 +44,7 @@ function addMarker(
     position: location,
     icon: {
       url: 'https://drive.google.com/uc?id=1L3qgGaLbgVQ1XEFbcgh-0ft8tsEJJOpg',
-      scaledSize: new google.maps.Size(3, 3),
+      scaledSize: new google.maps.Size(5, 5),
     },
     map: map,
   });
