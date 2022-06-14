@@ -128,14 +128,14 @@ function initMap(): void {
   Object.keys(stations).forEach((stn) => {
     const {name = '', cityName = '', stateName = '' } = stationInfo[stn] || {};
     const { asHalt, asNonHalt } = extraStationInfo[stn] || {};
-    const infoString = `<h3>${stn}</h3>${name}<br>${cityName}, ${stateName}<br>Train Crossings : ${trainCrossings[stn]}<br>As Halting : ${asHalt}<br>As Non Haltiing : ${asNonHalt || 0}`;
+    const infoString = `<h3>${stn}</h3>${name}<br>${cityName}, ${stateName}<br>Halting : ${asHalt} trains<br>Non Haltiing : ${asNonHalt || 0} trains`;
     addMarker(stnLoc[stn], map, infowindow, infoString);
   })
   paths.forEach((stnPath) => {
     const { stn1, stn2, freq } = stnPath;
     const {name: s1name = '', cityName: s1cityName = '', stateName: s1stateName = '' } = stationInfo[stn1] || {};
     const {name: s2name = '', cityName: s2cityName = '', stateName: s2stateName = '' } = stationInfo[stn2] || {};
-    const infoString = `<h3>${stn1} - ${stn2}</h3>${stn1}:<br>${s1name}<br>${s1cityName}, ${s1stateName}<br><br>${stn2}:<br>${s2name}<br>${s2cityName}, ${s2stateName}<br><br>Train Crossings : ${freq}`;
+    const infoString = `<h3>${stn1} - ${stn2}</h3>${stn1}:<br>${s1name}<br>${s1cityName}, ${s1stateName}<br><br>${stn2}:<br>${s2name}<br>${s2cityName}, ${s2stateName}<br><br>MMT Users Travelled : ${freq}`;
     addPath(stnPath, map, infowindow, infoString);
   });
 }
