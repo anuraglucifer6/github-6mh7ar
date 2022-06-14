@@ -9,45 +9,62 @@
 // Australia which was made by Charles Kingsford Smith.
 import { paths } from './routeEdgeData';
 import { stnLoc } from './stationLocationData';
+import { stationInfo } from './stationInfo';
+import { extraStationInfo } from './extraStationInfo';
+import { trainCrossings } from './trainCrossings';
 
 const color = [
-  "#ebdc78",
-  "#8be04e",
-  "#5ad45a",
-  "#00b7c7",
-  "#0d88e6",
-  "#1a53ff",
-  "#4421af",
-  "#7c1158",
-  "#b30000"
+  '#00ffff',
+  '#00bfff',
+  '#009fff',
+  '#0080ff',
+  '#0060ff',
+  '#0040ff',
+  '#0020ff',
+  '#0010d9',
+  '#0000b3',
 ];
 
 function getIndex(freq: number) {
-  if (freq > 10000) return 8;
-  else if (freq > 5000) return 7;
-  else if (freq > 2000) return 6;
-  else if (freq > 1000) return 5;
-  else if (freq > 500) return 4;
-  else if (freq > 200) return 3;
-  else if (freq > 100) return 2;
-  else if (freq > 50) return 1;
+  if (freq > 30000) return 8;
+  else if (freq > 22000) return 7;
+  else if (freq > 16000) return 6;
+  else if (freq > 12000) return 5;
+  else if (freq > 8000) return 4;
+  else if (freq > 3000) return 3;
+  else if (freq > 1000) return 2;
+  else if (freq > 500) return 1;
   else return 0;
 }
 
 function addMarker(
   location: google.maps.LatLngLiteral,
-  map: google.maps.Map
+  map: google.maps.Map,
+  infoWindow: google.maps.InfoWindow,
+  infoString: string,
 ) {
   // Add the marker at the clicked location, and add the next-available label
   // from the array of alphabetical characters.
-  new google.maps.Marker({
+  const marker = new google.maps.Marker({
     position: location,
     icon: {
       url: 'https://drive.google.com/uc?id=1L3qgGaLbgVQ1XEFbcgh-0ft8tsEJJOpg',
       scaledSize: new google.maps.Size(5, 5),
+      anchor: new google.maps.Point(10,2),
     },
     map: map,
   });
+
+  google.maps.event.addListener(marker, 'mouseover', function(e) {
+    infoWindow.setPosition(e.latLng);
+    infoWindow.setContent(infoString);
+    infoWindow.open(map);
+ });
+ 
+ // Close the InfoWindow on mouseout:
+ google.maps.event.addListener(marker, 'mouseout', function() {
+    infoWindow.close();
+ });
 }
 
 const addPath = (
@@ -56,7 +73,9 @@ const addPath = (
     stn2: string;
     freq: number;
   },
-  map: google.maps.Map
+  map: google.maps.Map,
+  infoWindow: google.maps.InfoWindow,
+  infoString: string,
 ) => {
   const { stn1, stn2, freq } = path;
   const pathCoordinates = [stnLoc[stn1], stnLoc[stn2]];
@@ -71,11 +90,22 @@ const addPath = (
     const stnPath = new google.maps.Polyline({
       path: pathCoordinates,
       geodesic: true,
-      strokeColor: color[getIndex(freq)],
+      strokeColor: freq === 0 ? '#F00' : color[getIndex(freq)],
       strokeOpacity: 1.0,
       strokeWeight: 4,
     });
     stnPath.setMap(map);
+
+    google.maps.event.addListener(stnPath, 'mouseover', function(e) {
+      infoWindow.setPosition(e.latLng);
+      infoWindow.setContent(infoString);
+      infoWindow.open(map);
+   });
+   
+   // Close the InfoWindow on mouseout:
+   google.maps.event.addListener(stnPath, 'mouseout', function() {
+      infoWindow.close();
+   });
   }
 };
 
@@ -88,13 +118,26 @@ function initMap(): void {
       mapTypeId: 'terrain',
     }
   );
+
+  const infowindow = new google.maps.InfoWindow();
   const stations = paths.reduce((acc, path) => {
     acc[path.stn1] = true;
     acc[path.stn2] = true;
     return acc;
   }, {});
-  Object.keys(stations).forEach((stn) => addMarker(stnLoc[stn], map))
-  paths.forEach((stnPath) => addPath(stnPath, map));
+  Object.keys(stations).forEach((stn) => {
+    const {name = '', cityName = '', stateName = '' } = stationInfo[stn] || {};
+    const { asHalt, asNonHalt } = extraStationInfo[stn] || {};
+    const infoString = `<h3>${stn}</h3>${name}<br>${cityName}, ${stateName}<br>Train Crossings : ${trainCrossings[stn]}<br>As Halting : ${asHalt}<br>As Non Haltiing : ${asNonHalt || 0}`;
+    addMarker(stnLoc[stn], map, infowindow, infoString);
+  })
+  paths.forEach((stnPath) => {
+    const { stn1, stn2, freq } = stnPath;
+    const {name: s1name = '', cityName: s1cityName = '', stateName: s1stateName = '' } = stationInfo[stn1] || {};
+    const {name: s2name = '', cityName: s2cityName = '', stateName: s2stateName = '' } = stationInfo[stn2] || {};
+    const infoString = `<h3>${stn1} - ${stn2}</h3>${stn1}:<br>${s1name}<br>${s1cityName}, ${s1stateName}<br><br>${stn2}:<br>${s2name}<br>${s2cityName}, ${s2stateName}<br><br>Train Crossings : ${freq}`;
+    addPath(stnPath, map, infowindow, infoString);
+  });
 }
 
 declare global {
